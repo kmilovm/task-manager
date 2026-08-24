@@ -22,6 +22,7 @@ single-page application, so a bearer token is issued at login instead of a serve
 | BR-104 | A successful login returns a JWT that expires 60 minutes after it is issued. |
 | BR-105 | A failed login gives the same message whether the email exists or not, so the endpoint cannot be used to enumerate accounts. |
 | BR-106 | Every endpoint under `/api/tasks` requires a valid, unexpired bearer token. |
+| BR-107 | An account carries a display name. It is required, is trimmed, and is between 1 and 100 characters. |
 
 ## Acceptance criteria
 
@@ -32,21 +33,31 @@ Feature: Account access
   I want to register and sign in
 
   Background:
-    Given the account "ada@example.com" already exists with password "Passw0rd!"
+    Given the account "ada@example.com" already exists with name "Ada Lovelace" and password "Passw0rd!"
 
   Scenario: Registering with a new email address
-    When I register with email "grace@example.com" and password "Passw0rd!"
+    When I register with email "grace@example.com", name "Grace Hopper" and password "Passw0rd!"
     Then my account is created
+    And my display name is "Grace Hopper"
     And I receive an access token
     And the response does not contain my password or its hash
 
+  Scenario: The display name is trimmed
+    When I register with email "grace@example.com", name "  Grace Hopper  " and password "Passw0rd!"
+    Then my display name is "Grace Hopper"
+
+  Scenario: Registering without a display name
+    When I register with email "grace@example.com", name "" and password "Passw0rd!"
+    Then the request is rejected with status 400
+    And the validation error mentions the field "displayName"
+
   Scenario: Registering with an email that is already taken
-    When I register with email "ada@example.com" and password "Passw0rd!"
+    When I register with email "ada@example.com", name "Ada Byron" and password "Passw0rd!"
     Then the request is rejected with status 409
     And the message is "An account with this email already exists."
 
   Scenario Outline: Registering with a password that is too weak
-    When I register with email "grace@example.com" and password "<password>"
+    When I register with email "grace@example.com", name "Grace Hopper" and password "<password>"
     Then the request is rejected with status 400
     And the validation error mentions the field "password"
 
@@ -61,6 +72,12 @@ Feature: Account access
     Then I receive an access token
     And the token identifies me as "ada@example.com"
     And the token expires in 60 minutes
+
+  Scenario: Reading my own profile
+    Given I am signed in as "ada@example.com"
+    When I request my profile
+    Then I see the email "ada@example.com" and the name "Ada Lovelace"
+    And the response does not contain my password hash
 
   Scenario: Signing in with a wrong password
     When I sign in as "ada@example.com" with password "wrong-password"
@@ -100,9 +117,12 @@ account deletion, rate limiting on the login endpoint.
 | Scenario | Test |
 |----------|------|
 | Registering with a new email address | `AuthServiceTests.RegisterAsync_WithNewEmail_CreatesUserAndReturnsToken` |
+| The display name is trimmed | `UserTests.Register_TrimsDisplayName` |
+| Registering without a display name | `RegisterRequestValidatorTests.Validate_WithEmptyDisplayName_Fails` |
 | Registering with an email that is already taken | `AuthServiceTests.RegisterAsync_WithExistingEmail_ThrowsEmailAlreadyInUse` |
 | Registering with a password that is too weak | `RegisterRequestValidatorTests.Validate_WithWeakPassword_Fails` |
 | Signing in with valid credentials | `AuthServiceTests.LoginAsync_WithValidCredentials_ReturnsToken` |
+| Reading my own profile | `AuthEndpointTests.GetMe_WhenSignedIn_ReturnsProfile` |
 | Signing in with a wrong password | `AuthServiceTests.LoginAsync_WithWrongPassword_ThrowsInvalidCredentials` |
 | Signing in with an email that does not exist | `AuthServiceTests.LoginAsync_WithUnknownEmail_ThrowsInvalidCredentials` |
 | Email address is matched regardless of casing | `AuthServiceTests.LoginAsync_IsCaseInsensitiveOnEmail` |
