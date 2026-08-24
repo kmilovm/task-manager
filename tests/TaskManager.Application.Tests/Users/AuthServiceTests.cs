@@ -1,6 +1,5 @@
 using FluentValidation;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using Shouldly;
 using TaskManager.Application.Abstractions;
 using TaskManager.Application.Common;
