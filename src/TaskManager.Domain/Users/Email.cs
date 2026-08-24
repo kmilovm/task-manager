@@ -15,7 +15,7 @@ public sealed partial record Email
     {
         DomainException.ThrowIfNullOrWhiteSpace(value, "Email is required.");
 
-        var normalised = value!.Trim().ToLowerInvariant();
+        var normalised = Normalise(value!);
 
         if (normalised.Length > MaxLength)
         {
@@ -30,7 +30,14 @@ public sealed partial record Email
         return new Email(normalised);
     }
 
+    public static bool IsValid(string? value) =>
+        !string.IsNullOrWhiteSpace(value)
+        && Normalise(value) is { Length: <= MaxLength } normalised
+        && AddressPattern().IsMatch(normalised);
+
     public override string ToString() => Value;
+
+    private static string Normalise(string value) => value.Trim().ToLowerInvariant();
 
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.CultureInvariant)]
     private static partial Regex AddressPattern();
