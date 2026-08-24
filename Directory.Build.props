@@ -7,9 +7,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
-
-    <!-- Required for IDE0005 (unused usings) to be reported on build. CS1591 is turned off
-         because XML documentation is used where it explains a decision, not on every member. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>

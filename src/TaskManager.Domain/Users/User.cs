@@ -15,7 +15,6 @@ public sealed class User
         CreatedAt = createdAt;
     }
 
-    // Required by EF Core, which materialises entities without going through the factory.
     private User()
     {
         Email = null!;
@@ -33,10 +32,6 @@ public sealed class User
 
     public DateTimeOffset CreatedAt { get; private set; }
 
-    /// <summary>
-    /// Creates an account. The password is hashed before it reaches the domain: hashing is an
-    /// infrastructure concern and the domain has no reason to know which algorithm was used.
-    /// </summary>
     public static User Register(string? email, string? displayName, string? passwordHash, DateTimeOffset createdAt)
     {
         DomainException.ThrowIfNullOrWhiteSpace(displayName, "Display name is required.");

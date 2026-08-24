@@ -9,9 +9,9 @@ Every requirement of the exercise statement, and where it is satisfied in this r
 | 1 | Database with at least one table for application data | `Tasks` table — `src/TaskManager.Infrastructure/Persistence/Configurations/TaskItemConfiguration.cs` |
 | 2 | An additional table to store users | `Users` table — `src/TaskManager.Infrastructure/Persistence/Configurations/UserConfiguration.cs` |
 | 3 | Unique identifier (primary key) plus at least two other fields | `Tasks`: `Id` (PK) + `Title`, `Description`, `Status`, `DueDate`, `CreatedAt`, `CompletedAt`, `OwnerId`. `Users`: `Id` (PK) + `Email`, `DisplayName`, `PasswordHash`, `CreatedAt` |
-| 4 | ASP.NET Web API with CRUD endpoints | `src/TaskManager.Api/Controllers/TasksController.cs` |
+| 4 | ASP.NET Web API with CRUD endpoints | `src/TaskManager.Api/Endpoints/TaskEndpoints.cs` |
 | 5 | Appropriate HTTP verbs, parameters and return values | `GET /api/tasks`, `GET /api/tasks/{id}`, `POST /api/tasks` (201 + `Location`), `PUT /api/tasks/{id}` (200), `DELETE /api/tasks/{id}` (204); errors as `application/problem+json` |
-| 6 | A second API with user creation and user login | `src/TaskManager.Api/Controllers/AuthController.cs` — `POST /api/auth/register`, `POST /api/auth/login` |
+| 6 | A second API with user creation and user login | `src/TaskManager.Api/Endpoints/AuthEndpoints.cs` — `POST /api/auth/register`, `POST /api/auth/login` |
 | 7 | Authorized and non-authorized endpoints | Non-authorized: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/public`, `GET /api/health`. Authorized: `GET /api/auth/me` and everything under `/api/tasks` |
 | 8 | Data access layer providing the CRUD operations | `src/TaskManager.Infrastructure/Persistence/Repositories/` behind the `ITaskRepository` / `IUserRepository` ports declared in the application layer |
 | 9 | Business logic layer with all business rules and validation | `src/TaskManager.Domain` (invariants) and `src/TaskManager.Application` (use cases, validators) |
@@ -53,11 +53,13 @@ Every requirement of the exercise statement, and where it is satisfied in this r
 
 Two points in the statement admit more than one reading. The choices made here are:
 
-- **"ASP.NET MVC, Web API"** — the API is built with attribute-routed MVC controllers deriving
-  from `ControllerBase` (the ASP.NET Core MVC pipeline: model binding, model state, filters,
-  action results) rather than minimal APIs, so the MVC framework is genuinely used. Server-side
-  Razor views are deliberately absent because the statement asks for a separate SPA frontend.
+- **"ASP.NET MVC, Web API"** — the API is built with minimal APIs grouped by feature
+  (`MapGroup`) returning `TypedResults`. Minimal APIs are part of ASP.NET Core Web API and cover
+  what the criteria actually assess: correct verbs, bound parameters, explicit return types and a
+  clean separation from the business layer. The MVC controller stack was not used because it adds
+  a class-per-feature and a filter pipeline this application has no requirement for, and
+  server-side Razor views are irrelevant here since the statement asks for a separate SPA.
 - **"a second API"** — implemented as a second, independently routed API surface
-  (`/api/auth`) with its own controller, DTOs, service and authorisation profile, rather than a
+  (`/api/auth`) with its own endpoint group, DTOs, service and authorisation profile, rather than a
   second host process. A separate deployable would add operational cost without changing the
   design of the exercise.

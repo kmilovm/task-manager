@@ -3,10 +3,6 @@ using TaskManager.Domain.Common;
 
 namespace TaskManager.Domain.Users;
 
-/// <summary>
-/// A normalised email address. Comparison is case-insensitive because the address is
-/// lowercased on the way in, which is what makes the unique index behave as BR-101 requires.
-/// </summary>
 public sealed partial record Email
 {
     public const int MaxLength = 254;
@@ -36,8 +32,6 @@ public sealed partial record Email
 
     public override string ToString() => Value;
 
-    // Deliberately permissive: the only way to prove an address is real is to send to it,
-    // so this rejects obvious mistakes without pretending to implement RFC 5322.
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.CultureInvariant)]
     private static partial Regex AddressPattern();
 }
