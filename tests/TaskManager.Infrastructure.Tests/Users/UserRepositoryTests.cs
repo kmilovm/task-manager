@@ -5,7 +5,7 @@ using TaskManager.Infrastructure.Persistence.Repositories;
 
 namespace TaskManager.Infrastructure.Tests.Users;
 
-public class UserRepositoryTests : IDisposable
+public sealed class UserRepositoryTests : IDisposable
 {
     private static readonly DateTimeOffset Now = new(2026, 1, 15, 10, 30, 0, TimeSpan.Zero);
 
