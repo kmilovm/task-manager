@@ -1,0 +1,10 @@
+@if (profile(); as user) {
+  <section class="card">
+    <h1>Welcome back, {{ user.displayName }}</h1>
+    <p class="muted">Signed in as {{ user.email }}, member since {{ user.createdAt | date: 'longDate' }}.</p>
+  </section>
+} @else if (loading()) {
+  <p class="muted">Loading your account…</p>
+} @else {
+  <p class="alert" role="alert">We could not load your account.</p>
+}
