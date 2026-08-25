@@ -38,6 +38,7 @@ Declared in `src/TaskManager.Application/Abstractions/Ports.cs`, implemented in
 | `IPasswordHasher` | `Security/BCryptPasswordHasher.cs` |
 | `ITokenGenerator` | `Security/JwtTokenGenerator.cs` |
 | `IUserRepository` | `Persistence/Repositories/UserRepository.cs` |
+| `ITaskRepository` | `Persistence/Repositories/TaskRepository.cs` |
 
 **Deliberately absent:** `IUnitOfWork` (`DbContext` already is one and nothing here spans two
 entities), CQRS, MediatR, a generic `IRepository<T>`, the Specification pattern, AutoMapper and
