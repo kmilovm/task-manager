@@ -4,7 +4,7 @@ The exercise asks for the prompt used to generate a task management API, a sampl
 out, and an account of how the output was validated and corrected. This is that account.
 
 It is not a hypothetical. **The entire `Tasks` feature in this repository — domain, application
-services, persistence, endpoints, the Angular screens and 172 of the 256 backend tests — was
+services, persistence, endpoints, the Angular screens and 172 of the 259 backend tests — was
 produced by driving an agent through the protocol below.** The 68 frontend tests were written by
 hand afterwards, for the reason given in §7. The `Users` feature was written by hand first, on
 purpose, so there would be a reference implementation to point the agent at and a fair comparison
