@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, inject, input } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 
 @Component({
@@ -11,9 +11,21 @@ import { AbstractControl } from '@angular/forms';
   `,
 })
 export class FieldErrorComponent {
+  private readonly changeDetector = inject(ChangeDetectorRef);
+
   readonly control = input.required<AbstractControl>();
   readonly serverErrors = input<string[]>([]);
   readonly label = input('This field');
+
+  constructor() {
+    // A FormControl is not a signal: marking it touched or invalid changes no input, so an OnPush
+    // view would never be re-rendered and the message would stay invisible.
+    effect((onCleanup) => {
+      const subscription = this.control().events.subscribe(() => this.changeDetector.markForCheck());
+
+      onCleanup(() => subscription.unsubscribe());
+    });
+  }
 
   message(): string | null {
     const control = this.control();

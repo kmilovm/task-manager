@@ -109,6 +109,44 @@ describe('TaskListComponent', () => {
     expect(text()).not.toContain('Review the deck');
   });
 
+  it('keeps the table in place while refreshing, so filtering does not shift the layout', fakeAsync(() => {
+    respondWith([task('1', 'Review the deck')]);
+
+    const tableBefore = fixture.debugElement.query(By.css('.task-table')).nativeElement as HTMLElement;
+    const topBefore = tableBefore.offsetTop;
+
+    fixture.componentInstance.filters.controls.status.setValue('Done');
+    tick(250);
+    fixture.detectChanges();
+
+    const table = fixture.debugElement.query(By.css('.task-table'));
+
+    expect(table).not.toBeNull();
+    expect(table.nativeElement).toBe(tableBefore);
+    expect((table.nativeElement as HTMLElement).offsetTop).toBe(topBefore);
+    expect(table.nativeElement.classList).toContain('is-refreshing');
+
+    http.expectOne((request) => request.url.endsWith('/tasks')).flush([]);
+    fixture.detectChanges();
+  }));
+
+  it('announces the refresh to assistive technology without occupying space', fakeAsync(() => {
+    respondWith([task('1', 'Review the deck')]);
+
+    const status = fixture.debugElement.query(By.css('[role="status"]'));
+
+    expect(status.nativeElement.classList).toContain('visually-hidden');
+
+    fixture.componentInstance.filters.controls.status.setValue('Done');
+    tick(250);
+    fixture.detectChanges();
+
+    expect(status.nativeElement.textContent.trim()).toBe('Refreshing your tasks');
+
+    http.expectOne((request) => request.url.endsWith('/tasks')).flush([]);
+    fixture.detectChanges();
+  }));
+
   it('debounces the filter into a single request', fakeAsync(() => {
     respondWith([]);
 

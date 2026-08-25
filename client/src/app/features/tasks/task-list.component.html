@@ -50,11 +50,9 @@
     }
   </section>
 } @else {
-  @if (loading()) {
-    <p class="muted refreshing" role="status">Refreshing…</p>
-  }
+  <p class="visually-hidden" role="status">{{ loading() ? 'Refreshing your tasks' : '' }}</p>
 
-  <table class="card task-table">
+  <table class="card task-table" [class.is-refreshing]="loading()">
     <caption class="visually-hidden">
       Your tasks, ordered by due date with undated tasks last
     </caption>

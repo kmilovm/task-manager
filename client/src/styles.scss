@@ -219,10 +219,6 @@ button.danger {
   justify-content: space-between;
 }
 
-.refreshing {
-  margin: 0 0 0.5rem;
-}
-
 .empty-state {
   display: grid;
   gap: 1rem;
@@ -238,6 +234,14 @@ button.danger {
   border-collapse: collapse;
   padding: 0;
   width: 100%;
+  transition: opacity 120ms ease;
+}
+
+/* Only a refresh slow enough to notice dims the table. The delay means a fast response finishes
+   before the transition starts, so filtering does not flicker. */
+.task-table.is-refreshing {
+  opacity: 0.55;
+  transition: opacity 120ms ease 400ms;
 }
 
 .task-table th,
