@@ -5,7 +5,8 @@ out, and an account of how the output was validated and corrected. This is that 
 
 It is not a hypothetical. **The entire `Tasks` feature in this repository — domain, application
 services, persistence, endpoints, the Angular screens and 172 of the 256 backend tests — was
-produced by driving an agent through the protocol below.** The `Users` feature was written by hand first, on
+produced by driving an agent through the protocol below.** The 60 frontend tests were written by
+hand afterwards, for the reason given in §7. The `Users` feature was written by hand first, on
 purpose, so there would be a reference implementation to point the agent at and a fair comparison
 between the two halves of the same codebase.
 
@@ -383,10 +384,13 @@ first user's task; expired tokens, tokens signed with the wrong key, and no toke
 
 ## 7. What this process does not give you
 
-- **The frontend has no tests.** There is no Angular test harness in this repository and adding one
-  meant adding npm packages, which the constraints forbade. Everything in the SPA was verified
-  manually — the flows work, but nothing protects them from regression. The headline "256 tests"
-  covers the backend only.
+- **A false claim nearly became a documented gap.** The agent reported that the repository had no
+  Angular test harness and that adding one required npm packages, so Phase 5 shipped without tests
+  and this document originally recorded that as accepted debt. It was wrong: Karma and Jasmine
+  were already in `package.json`, `ng test` was already configured in `angular.json`, and
+  `tsconfig.spec.json` already existed. The claim was accepted without checking — the exact failure
+  this write-up warns against, committed by the reviewer rather than the agent. The SPA now has 60
+  tests, written afterwards by hand.
 - **Characterization tests are not TDD.** The seeder tests passed on their first run because the
   seeder already existed. That is correct, but it is a different activity from the red-green pairs
   in the rest of the history.
