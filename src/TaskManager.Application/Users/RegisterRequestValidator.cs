@@ -1,4 +1,5 @@
 using FluentValidation;
+using TaskManager.Application.Common;
 using TaskManager.Domain.Users;
 
 namespace TaskManager.Application.Users;
@@ -15,7 +16,7 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
 
         RuleFor(request => request.DisplayName)
             .NotEmpty()
-            .MaximumLength(User.MaxDisplayNameLength);
+            .MaximumTrimmedLength(User.MaxDisplayNameLength);
 
         RuleFor(request => request.Password)
             .NotEmpty()

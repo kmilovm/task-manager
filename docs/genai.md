@@ -357,10 +357,14 @@ of entry point and is unit-testable without HTTP. They cite the domain constants
 cannot drift. The domain guards again, because a validator is a courtesy to the caller and an
 invariant is a guarantee.
 
-One honest imperfection: the validator measures the raw title while the domain measures the trimmed
-one, so a 200-character title padded with spaces is rejected at the boundary although the domain
-would accept it. `FluentValidation.Transform` was removed in version 12 (§4), so closing the gap
-means a hand-rolled rule duplicating the message. It is a decision, not an oversight.
+One inconsistency survived several reviews before being caught: the validators measured the raw
+string while the domain measures the trimmed one, so a 200-character title padded with spaces was
+rejected at the boundary although the domain would have accepted it. `FluentValidation.Transform`,
+which existed for exactly this, was removed in version 12 (§4). The fix is a shared
+`MaximumTrimmedLength` rule that measures what the domain measures, applied at all five call sites,
+with tests pinning the padded case. It is worth recording that this was documented as a deliberate
+trade-off for a while before it was recognised as a defect — consistency with an existing behaviour
+is a comfortable reason to leave something wrong.
 
 **Authentication.** JWT bearer, HS256, sixty-minute lifetime, `ClockSkew` set to zero because the
 five-minute default would let a token expired three minutes ago through. `MapInboundClaims` is off

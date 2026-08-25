@@ -77,7 +77,7 @@ dotnet test
 npm --prefix client run test:ci
 ```
 
-324 tests: 256 on the backend across four projects, 68 on the client. The backend suite needs no
+327 tests: 259 on the backend across four projects, 68 on the client. The backend suite needs no
 container — infrastructure and API tests run against SQLite in memory, while production uses SQL
 Server. The client suite runs in headless Chrome.
 
@@ -189,11 +189,6 @@ Stated rather than hidden.
 
 - **Out of scope by choice**, and listed as such in the specs: refresh tokens, password reset,
   roles, sub-tasks, sharing, soft delete and audit trail, server-side pagination.
-- **The title length check is measured differently at the two layers.** The FluentValidation rule
-  measures the raw string while the domain measures the trimmed one, so a 200-character title
-  padded with spaces is rejected at the boundary although the domain would accept it.
-  `FluentValidation.Transform` was removed in version 12, so closing the gap means a hand-rolled
-  rule duplicating the error message. It is a decision, not an oversight.
 - **`?status=1` works as well as `?status=InProgress`.** Numeric ordinals bind, which
   `Enum.IsDefined` permits. Responses always serialise the string form.
 - **The access token is kept in `localStorage`.** That is the common choice for a SPA with no

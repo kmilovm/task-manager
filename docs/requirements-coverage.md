@@ -14,7 +14,7 @@ Every requirement of the exercise statement, and where it is satisfied in this r
 | 6 | A second API with user creation and user login | `src/TaskManager.Api/Endpoints/AuthEndpoints.cs` — `POST /api/auth/register`, `POST /api/auth/login` |
 | 7 | Authorized and non-authorized endpoints | Non-authorized: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/public`, `GET /api/health`. Authorized: `GET /api/auth/me` and everything under `/api/tasks` |
 | 8 | Data access layer providing the CRUD operations | `src/TaskManager.Infrastructure/Persistence/Repositories/` behind the `ITaskRepository` / `IUserRepository` ports declared in the application layer |
-| 9 | Business logic layer with all business rules and validation | `src/TaskManager.Domain` (invariants) and `src/TaskManager.Application` (use cases, validators) |
+| 9 | Business logic layer with all business rules and validation | `src/TaskManager.Domain` (invariants) and `src/TaskManager.Application` (use cases, validators sharing the domain's constants and its trimmed measurement) |
 | 10 | Business logic independent of the data layer and the API | `TaskManager.Domain` has no project references; `TaskManager.Application` references only `TaskManager.Domain`. Persistence is reached through interfaces the application layer owns |
 | 11 | Unit tests for the data access layer | `tests/TaskManager.Infrastructure.Tests` |
 | 12 | Unit tests for the business logic layer | `tests/TaskManager.Domain.Tests`, `tests/TaskManager.Application.Tests` |

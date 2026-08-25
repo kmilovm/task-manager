@@ -75,6 +75,23 @@ public class CreateTaskRequestValidatorTests
             .ShouldNotHaveValidationErrorFor(request => request.DueDate);
     }
 
+    [Fact]
+    public void Validate_MeasuresTheTitleAfterTrimmingIt()
+    {
+        var padded = $"  {new string('a', 200)}  ";
+
+        _validator.TestValidate(Request(title: padded)).ShouldNotHaveValidationErrorFor(request => request.Title);
+    }
+
+    [Fact]
+    public void Validate_MeasuresTheDescriptionAfterTrimmingIt()
+    {
+        var padded = $"  {new string('a', 2000)}  ";
+
+        _validator.TestValidate(Request(description: padded))
+            .ShouldNotHaveValidationErrorFor(request => request.Description);
+    }
+
     private static CreateTaskRequest Request(
         string title = "Prepare invoices",
         string? description = "Q1 batch",

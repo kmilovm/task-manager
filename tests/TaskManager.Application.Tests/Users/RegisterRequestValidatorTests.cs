@@ -49,6 +49,15 @@ public class RegisterRequestValidatorTests
             .ShouldHaveValidationErrorFor(request => request.Email);
     }
 
+    [Fact]
+    public void Validate_MeasuresTheDisplayNameAfterTrimmingIt()
+    {
+        var padded = $"  {new string('a', 100)}  ";
+
+        _validator.TestValidate(Request(displayName: padded))
+            .ShouldNotHaveValidationErrorFor(request => request.DisplayName);
+    }
+
     private static RegisterRequest Request(
         string email = "grace@example.com",
         string displayName = "Grace Hopper",
