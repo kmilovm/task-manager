@@ -1,3 +1,4 @@
+using TaskManager.Domain.Tasks;
 using TaskManager.Domain.Users;
 
 namespace TaskManager.Application.Abstractions;
@@ -30,4 +31,21 @@ public interface IUserRepository
     Task<bool> ExistsWithEmailAsync(Email email, CancellationToken cancellationToken = default);
 
     Task AddAsync(User user, CancellationToken cancellationToken = default);
+}
+
+public interface ITaskRepository
+{
+    Task<TaskItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<TaskItem>> ListAsync(
+        Guid ownerId,
+        TaskItemStatus? status,
+        string? search,
+        CancellationToken cancellationToken = default);
+
+    Task AddAsync(TaskItem task, CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(TaskItem task, CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(TaskItem task, CancellationToken cancellationToken = default);
 }
