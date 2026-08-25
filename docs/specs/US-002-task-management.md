@@ -26,6 +26,8 @@ future entry point and can be unit tested without HTTP.
 | BR-207 | A user can only read, change or delete tasks they own. Tasks owned by somebody else are indistinguishable from tasks that do not exist. |
 | BR-208 | Deleting a task removes it permanently. |
 | BR-209 | The list is ordered by due date ascending with undated tasks last, then by creation time descending. |
+| BR-210 | The past-due-date rule applies only when a task is created. An existing task may be moved to a date in the past, so a slipped deadline can be recorded honestly. |
+| BR-211 | Completion time records when the work was finished, not when the record was last touched: updating a task that is already `Done` keeps its original completion time. |
 
 ## Acceptance criteria
 
@@ -74,6 +76,10 @@ Feature: Personal task management
     Then the request is rejected with status 400
     And the message is "Due date cannot be in the past."
 
+  Scenario: Moving an existing task to a date in the past
+    When I update "Write the report" with due date "2020-01-01"
+    Then the task due date is "2020-01-01"
+
   Scenario: Listing my tasks
     When I request my task list
     Then I see 3 tasks
@@ -114,6 +120,10 @@ Feature: Personal task management
   Scenario: Reopening a completed task clears the completion time
     When I update "Archive last sprint" with status "Pending"
     Then the completion time is empty
+
+  Scenario: Updating a task that is already done keeps its completion time
+    When I update "Archive last sprint" with title "Archive the last sprint"
+    Then the completion time is unchanged
 
   Scenario: Clearing a due date
     When I update "Write the report" with no due date
@@ -158,18 +168,20 @@ task to another user, recurring tasks, soft delete and audit trail, server-side 
 | Creating a task with a title longer than 200 characters | `CreateTaskRequestValidatorTests.Validate_WithTooLongTitle_Fails` |
 | The title is trimmed | `TaskItemTests.Create_TrimsTitle` |
 | Creating a task due in the past | `TaskItemTests.Create_WithPastDueDate_Throws` |
+| Moving an existing task to a date in the past | `TaskItemTests.Update_WithAPastDueDate_IsAllowed` |
 | Listing my tasks | `TaskServiceTests.GetAllAsync_ReturnsOnlyTasksOwnedByCaller` |
 | Tasks are ordered by due date with undated tasks last | `TaskRepositoryTests.ListAsync_OrdersByDueDateThenCreatedAt` |
-| Filtering by status | `TaskServiceTests.GetAllAsync_FiltersByStatus` |
-| Searching by title | `TaskServiceTests.GetAllAsync_FiltersBySearchTerm` |
-| Searching is case-insensitive | `TaskServiceTests.GetAllAsync_SearchIsCaseInsensitive` |
-| Reading a single task | `TasksEndpointTests.GetTask_WhenOwned_ReturnsTask` |
+| Filtering by status | `TaskRepositoryTests.ListAsync_FiltersByStatus` |
+| Searching by title | `TaskRepositoryTests.ListAsync_FiltersBySearchTerm` |
+| Searching is case-insensitive | `TaskRepositoryTests.ListAsync_SearchIsCaseInsensitive` |
+| Reading a single task | `TaskEndpointTests.GetTask_WhenOwned_ReturnsTask` |
 | Updating a task | `TaskServiceTests.UpdateAsync_WhenOwned_AppliesChanges` |
 | Completing a task records when it was completed | `TaskItemTests.ChangeStatus_ToDone_SetsCompletedAt` |
 | Reopening a completed task clears the completion time | `TaskItemTests.ChangeStatus_FromDone_ClearsCompletedAt` |
+| Updating a task that is already done keeps its completion time | `TaskItemTests.ChangeStatus_WhenAlreadyDone_KeepsCompletedAt` |
 | Clearing a due date | `TaskItemTests.Update_WithNullDueDate_ClearsDueDate` |
 | Deleting a task | `TaskServiceTests.DeleteAsync_WhenOwned_RemovesTask` |
 | Reading a task that belongs to somebody else | `TaskServiceTests.GetByIdAsync_WhenOwnedByAnotherUser_ThrowsNotFound` |
 | Updating a task that belongs to somebody else | `TaskServiceTests.UpdateAsync_WhenOwnedByAnotherUser_ThrowsNotFound` |
 | Deleting a task that belongs to somebody else | `TaskServiceTests.DeleteAsync_WhenOwnedByAnotherUser_ThrowsNotFound` |
-| Requesting a task that does not exist | `TasksEndpointTests.GetTask_WhenMissing_ReturnsNotFound` |
+| Requesting a task that does not exist | `TaskEndpointTests.GetTask_WhenMissing_ReturnsNotFound` |
