@@ -77,7 +77,7 @@ dotnet test
 npm --prefix client run test:ci
 ```
 
-316 tests: 256 on the backend across four projects, 60 on the client. The backend suite needs no
+332 tests: 256 on the backend across four projects, 76 on the client. The backend suite needs no
 container — infrastructure and API tests run against SQLite in memory, while production uses SQL
 Server. The client suite runs in headless Chrome.
 
