@@ -126,6 +126,34 @@ public class TaskServiceTests
     }
 
     [Fact]
+    public async Task GetAllAsync_WithAStatusOutsideTheEnumeration_ThrowsValidationExceptionWithoutTouchingTheRepository()
+    {
+        var exception = await Should.ThrowAsync<ValidationException>(
+            () => _service.GetAllAsync(Ada, (TaskItemStatus)99, null));
+
+        exception.Errors.Select(failure => failure.PropertyName).ShouldContain("Status");
+
+        await _tasks.DidNotReceive().ListAsync(
+            Arg.Any<Guid>(),
+            Arg.Any<TaskItemStatus?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(TaskItemStatus.Pending)]
+    [InlineData(TaskItemStatus.InProgress)]
+    [InlineData(TaskItemStatus.Done)]
+    public async Task GetAllAsync_WithAKnownStatus_QueriesTheRepository(TaskItemStatus status)
+    {
+        GivenList(Ada, "Write the report");
+
+        await _service.GetAllAsync(Ada, status, null);
+
+        await _tasks.Received(1).ListAsync(Ada, status, null, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task GetAllAsync_WhenTheCallerOwnsNothing_ReturnsAnEmptyList()
     {
         GivenList(Ada);

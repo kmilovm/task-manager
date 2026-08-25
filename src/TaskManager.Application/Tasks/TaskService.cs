@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.Results;
 using TaskManager.Application.Abstractions;
 using TaskManager.Application.Common;
 using TaskManager.Domain.Tasks;
@@ -51,6 +52,17 @@ public sealed class TaskService : ITaskService
         string? search,
         CancellationToken cancellationToken = default)
     {
+        // A value outside the enumeration binds happily and would silently match nothing, so the
+        // caller would read an empty list as "you have no such tasks" instead of "no such status".
+        if (status is { } wanted && !Enum.IsDefined(wanted))
+        {
+            throw new ValidationException([
+                new ValidationFailure(
+                    "Status",
+                    $"'Status' has a range of values which does not include '{(int)wanted}'.")
+            ]);
+        }
+
         var tasks = await _tasks.ListAsync(ownerId, status, search, cancellationToken);
 
         return tasks.Select(ToDto).ToList();

@@ -35,6 +35,11 @@ internal sealed class ApiExceptionHandler : IExceptionHandler
     private static ProblemDetails? Map(Exception exception) => exception switch
     {
         ValidationException validation => ValidationProblem(validation),
+
+        // Parameter binding failures. The framework throws these instead of writing a response
+        // whenever RouteHandlerOptions.ThrowOnBadRequest is set, which is the default in
+        // Development; unmapped, they reached the fallback handler and became a 500.
+        BadHttpRequestException badRequest => Problem(badRequest.StatusCode, "Bad request", badRequest.Message),
         InvalidCredentialsException => Problem(StatusCodes.Status401Unauthorized, "Unauthorized", exception.Message),
         NotFoundException => Problem(StatusCodes.Status404NotFound, "Not found", exception.Message),
         ConflictException => Problem(StatusCodes.Status409Conflict, "Conflict", exception.Message),

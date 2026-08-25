@@ -30,6 +30,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         await context.Database.EnsureCreatedAsync();
+
+        // Tasks first: Tasks.OwnerId references Users.Id with DeleteBehavior.Restrict.
+        await context.Tasks.ExecuteDeleteAsync();
         await context.Users.ExecuteDeleteAsync();
     }
 
