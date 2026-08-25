@@ -126,6 +126,6 @@ account deletion, rate limiting on the login endpoint.
 | Signing in with a wrong password | `AuthServiceTests.LoginAsync_WithWrongPassword_ThrowsInvalidCredentials` |
 | Signing in with an email that does not exist | `AuthServiceTests.LoginAsync_WithUnknownEmail_ThrowsInvalidCredentials` |
 | Email address is matched regardless of casing | `AuthServiceTests.LoginAsync_IsCaseInsensitiveOnEmail` |
-| Reaching a protected endpoint without a token | `TasksEndpointTests.GetTasks_WithoutToken_ReturnsUnauthorized` |
-| Reaching a protected endpoint with an expired token | `TasksEndpointTests.GetTasks_WithExpiredToken_ReturnsUnauthorized` |
+| Reaching a protected endpoint without a token | `TaskEndpointTests.GetTasks_WithoutToken_ReturnsUnauthorized` |
+| Reaching a protected endpoint with an expired token | `TaskEndpointTests.GetTasks_WithExpiredToken_ReturnsUnauthorized` |
 | Reaching the public health endpoint without a token | `HealthEndpointTests.GetHealth_WithoutToken_ReturnsOk` |
