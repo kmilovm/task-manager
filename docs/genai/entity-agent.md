@@ -13,11 +13,16 @@ entity specification and the repository itself as context.
 Generated code is only as good as the context it is given, and a written specification is a far
 better context pack than a conversation. So the agent is never asked to invent an architecture.
 It is asked to reproduce a vertical slice that already exists, against a specification that
-already states the rules, with tests written before the code and a human gate between phases.
+already states the rules, with tests written before the code.
 
 The three failure modes this guards against are the ones these tools reliably hit: quietly
 breaking a layer boundary, quietly dropping a business rule that was never written down, and
 producing tests that assert the implementation instead of the behaviour.
+
+There is a fourth, subtler one, and it is the reason for the closing report in the prompt below:
+**unattended work does not break the build, it accumulates small decisions that compile.** Drift is
+invisible in a green run, so the agent is required to surface it rather than the reviewer having to
+excavate it.
 
 ---
 
@@ -29,15 +34,15 @@ producing tests that assert the implementation instead of the behaviour.
 >
 > **Read first, in this order:**
 > 1. `docs/architecture.md` — the dependency rule, the anatomy of a feature, and the conventions.
-> 2. `docs/specs/README.md` — how specifications drive tests.
-> 3. The `Users` feature, end to end, as the reference implementation: the entity, the service,
->    the validators, the repository, the endpoints, and all four test projects.
-> 4. The entity specification you have been given.
+> 2. `docs/genai.md` — the corrections a previous run of this protocol needed. Do not repeat them.
+> 3. `docs/specs/README.md` — how specifications drive tests.
+> 4. The `Users` and `Tasks` features, end to end, as the reference implementation: the entities,
+>    the services, the validators, the repositories, the endpoints, and all five test projects.
+> 5. The entity specification you have been given.
 >
 > **Hard constraints.**
-> - Do not modify any existing feature. You add files; you touch existing files only where the
->   architecture document says a feature registers itself (the ports file, the DI registration,
->   the `DbContext`, the Angular routes).
+> - Do not modify an existing feature. You add files; you touch existing files only at the
+>   registration points listed below.
 > - Do not add a NuGet or npm package. If you believe one is required, stop and say so.
 > - Tests come before production code, always, and you show the failing run before implementing.
 > - No business rule in an endpoint. No `DateTimeOffset.UtcNow` outside the clock adapter. No
@@ -47,67 +52,84 @@ producing tests that assert the implementation instead of the behaviour.
 > - Do not create configuration files for your own tooling anywhere in the repository, not even
 >   temporarily. If running something requires one, say so and stop.
 >
-> **Work in this order, stopping for approval between phases.**
+> **The registration points**, and nothing else, may be edited:
+> `Application/Abstractions/Ports.cs` · `Application/DependencyInjection.cs` ·
+> `Infrastructure/DependencyInjection.cs` · `Persistence/AppDbContext.cs` ·
+> `Persistence/DatabaseSeeder.cs` · `Api/Program.cs` · `client/src/app/app.routes.ts` ·
+> `tests/TaskManager.Api.Tests/ApiFactory.cs` (shared harness, not a feature) · and, for a child
+> entity, **one additive navigation link in the parent feature's list template** — a feature nobody
+> can reach is not a delivered feature.
 >
-> *Phase 0 — Plan.* Produce, and do not write any code until it is approved: the list of files you
-> will add or change; the order of the slices; which test covers which numbered scenario of the
-> specification; every business rule you found in the specification and where you will enforce it;
-> anything in the specification you found ambiguous, with the reading you propose.
+> **Work in this order.**
 >
-> *Phase 1 — Domain.* Write the entity tests from the specification's invariants, show them
-> failing, then write the entity. Run the domain suite.
+> *Phase 0 — Plan.* Produce, and write no code until it is approved: the files you will add or
+> change; the order of the slices; which test covers which named scenario; every business rule you
+> found and where you will enforce it; and every ambiguity, with the reading you propose. Then stop.
 >
-> *Phase 2 — Application.* Write the validator tests and the service tests using NSubstitute
-> fakes and a frozen clock, show them failing, then write the contracts, the validators, the port
-> and the service. Register the service in `AddApplication`. Run the application suite.
->
-> *Phase 3 — Persistence.* Write the repository tests against SQLite in memory, show them failing,
-> then write the entity configuration, the repository and the `DbSet`. Register the repository in
-> `AddInfrastructure`. Generate the migration with the CLI; never hand-write one. Run the
-> infrastructure suite.
->
-> *Phase 4 — API.* Write the endpoint tests against `WebApplicationFactory`, show them failing,
-> then write the endpoint group and map it in `Program`. Run the whole backend suite and the build.
->
-> *Phase 5 — Frontend.* Add the feature folder: models, typed HTTP service, signal-based store,
-> list component and form component. Add the route behind the auth guard. Run `ng build` and
-> report that it is warning-free.
+> *Phases 1–5 — Domain, Application, Persistence, API, Frontend.* Once the plan is approved these
+> run to completion without stopping. Each one: write the tests, show the failing run, implement,
+> show the passing run. Generate the migration with the CLI, never by hand, and apply it to a real
+> SQL Server — a suite green on SQLite proves nothing about a migration. The frontend ships with
+> tests: Karma and Jasmine are already configured, `npm run test:ci`.
 >
 > *Phase 6 — Close.* Update the specification's traceability table with the real test names, and
-> update `docs/requirements-coverage.md` if a row changes. Report the final suite output and the
-> list of files added.
+> `docs/requirements-coverage.md` if a row changes.
 >
-> **Report at every phase**: the command you ran, its actual output, and — when a test failed for
-> a reason you did not expect — what you changed and why. Never report a suite as passing without
-> showing the run.
+> **Report at every phase**: the command you ran and its actual output. Never report a suite as
+> passing without showing the run.
+>
+> **Two things are required in your closing report.**
+>
+> 1. **Prove at least one test bites.** A suite that goes green on the first implementation run is a
+>    claim, not evidence. Delete one guard that enforces a business rule, re-run, show the test that
+>    fails, restore the file, re-run green. Say which rule you probed and whether anything survived
+>    the mutation that should not have.
+> 2. **A numbered list of every decision you made that nobody reviewed.** Design choices, naming
+>    vocabulary, indexes, anything you resolved alone and then built on. This is not a confession;
+>    it is the deliverable that makes running unattended safe.
 
 ---
 
 ## Review gates
 
-Applied by a human between phases. These are checks, not suggestions; a failed check sends the
-phase back.
+Applied by a human, at the plan and again at the end. These are checks, not suggestions; a failed
+check sends the work back.
 
 | Gate | What is checked |
 |------|-----------------|
-| Layering | No reference to EF Core or ASP.NET from Domain or Application. `dotnet list <project> reference` proves it |
-| Rules | Every business rule in the specification appears in exactly one place, and that place is the domain or the application layer |
-| Ownership | The ownership check sits in the service, returns not-found, and has a test that a second user cannot read, update or delete the record |
+| Layering | No reference to EF Core or ASP.NET from Domain or Application. `git grep` proves it |
+| Rules | Every business rule in the specification appears in exactly one place, and that place is the domain or the application layer. A rule that can only live in the mapping — a delete cascade, say — must be named as the exception rather than passed over |
+| Ownership | The ownership check sits in the service, returns not-found, and a test compares the foreign response against the missing response rather than against a literal string |
 | Dates | No `DateTimeOffset.UtcNow` outside `SystemClock`; date-only comparisons use `DateOnly` |
 | HTTP | 201 with `Location`, 204 on delete, 404 not 403, `ProblemDetails` on every error path |
-| Tests | Assertions are on observable behaviour. A test that passes before its implementation exists is rejected as broken |
-| Migration | Generated by the CLI, and applying it to an empty database reproduces the schema |
-| Warnings | `dotnet build` and `ng build` are both clean |
+| Tests | Assertions are on observable behaviour, and on what the page renders rather than on control state. A test that passes before its implementation exists is rejected as broken |
+| Migration | Generated by the CLI, applied to a real SQL Server, and the schema read back from `sys.columns`, `sys.indexes` and `sys.foreign_keys` including the delete rule |
+| Warnings | `dotnet build` and `npm run build` are both clean |
+| Drift | The closing list of unreviewed decisions has been read, and each item accepted or sent back |
 
 ---
 
-## Running it live
+## Running it
 
-1. Write the entity specification (`entity-spec-template.md`) — three minutes of typing.
+1. Write the entity specification from `entity-spec-template.md` — a few minutes of typing. This is
+   the step that matters: the agent executes a specification, it does not design one.
 2. Give the agent this document, the specification and the repository.
-3. Approve the plan, or correct it. The corrections are the interesting part.
-4. Let it run the phases, watching the test output.
-5. Show the new endpoints in Swagger and the new screen in the SPA.
+3. Review the plan. Approve it, or correct it — the corrections are the interesting part, and this
+   is the only place where judgement is cheap. A design fixed in prose costs a paragraph; the same
+   fix after four files exist costs a rewrite.
+4. Let phases 1 to 5 run.
+5. Read the closing report: the mutation probe, and the unreviewed decisions.
+6. Show the new endpoints in Swagger and the new screen in the SPA.
 
-If a phase goes wrong, that is not a failed demo — the recovery is the demonstration. Read the
-failure, correct the specification or the constraint that allowed it, and re-run the phase.
+**Measured on a `ChecklistItem` entity** — a child of `TaskItem`, with a cascade, a nested route and
+transitive ownership — one full run took about thirty minutes: five for the plan, one and a half for
+the domain, four for the application, three for persistence, five and a half for the API, and nine
+for the frontend. The frontend is the long pole. Budget accordingly, and note that the plan is
+mostly reading, which is exactly what makes the rest correct.
+
+If a phase goes wrong, that is not a failed run — the recovery is the demonstration. Read the
+failure, correct the specification or the constraint that allowed it, and re-run.
+
+**When to keep a gate between every phase instead:** an entity whose rules you are unsure of, a
+change that touches something shared, or the first time you run this against a codebase. Speed is
+worth having only once the shape is known.

@@ -58,14 +58,15 @@ a human gate between phases. Reproduced from `docs/genai/entity-agent.md`:
 > - The build has `TreatWarningsAsErrors`. A warning is a failure.
 > - Do not create configuration files for your own tooling anywhere in the repository.
 >
-> **Work in this order, stopping for approval between phases.**
+> **Work in this order.**
 >
-> *Phase 0 — Plan.* Produce, and do not write any code until it is approved: the files you will
-> add or change; the order of the slices; which test covers which numbered scenario; every business
-> rule you found and where you will enforce it; anything ambiguous, with the reading you propose.
+> *Phase 0 — Plan.* Produce, and write no code until it is approved: the files you will add or
+> change; the order of the slices; which test covers which named scenario; every business rule you
+> found and where you will enforce it; every ambiguity, with the reading you propose. Then stop.
 >
-> *Phases 1–5* — domain, application, persistence, API, frontend. Each one: write the failing
-> tests, show the failing run, implement, show the passing run.
+> *Phases 1–5* — domain, application, persistence, API, frontend. Once the plan is approved these
+> run to completion. Each one: write the tests, show the failing run, implement, show the passing
+> run.
 >
 > **Report at every phase**: the command you ran, its actual output, and — when a test failed for
 > a reason you did not expect — what you changed and why. Never report a suite as passing without
@@ -82,6 +83,17 @@ tests-written-alongside. It also catches vacuous tests — see §4.
 
 **"Stop and say so."** Given an explicit way to refuse, the agent used it instead of improvising.
 It never added a package.
+
+The protocol originally gated between every phase. A second run, rehearsing a `ChecklistItem`
+entity, was deliberately given three layers to work through unattended so the cost could be
+measured. It produced no defect — and the agent's own account of what it did cost is the reason
+the protocol now asks for a closing list of unreviewed decisions:
+
+> Unattended layers do not break the build, they accumulate small decisions that compile. The
+> failure mode is drift, and drift is invisible in a green run.
+
+The mitigation is one paragraph of reporting rather than five stops, so the protocol's default is
+now plan, one approval, then run to completion.
 
 ---
 
