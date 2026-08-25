@@ -44,6 +44,8 @@ producing tests that assert the implementation instead of the behaviour.
 >   `IQueryable` returned from a repository.
 > - A record owned by another user is reported as 404, never 403.
 > - The build has `TreatWarningsAsErrors`. A warning is a failure.
+> - Do not create configuration files for your own tooling anywhere in the repository, not even
+>   temporarily. If running something requires one, say so and stop.
 >
 > **Work in this order, stopping for approval between phases.**
 >
