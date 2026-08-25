@@ -28,7 +28,7 @@ Every requirement of the exercise statement, and where it is satisfied in this r
 | 15 | Responsive | Fluid layout, single column below 768px, card list on small screens and table on large ones |
 | 16 | User-friendly | Inline validation messages, loading and empty states, confirmation before delete, keyboard-accessible forms |
 | 17 | CRUD operations for the use case | Create, list, filter, edit and delete tasks from the SPA |
-| 18 | Structured code, clean components and state | Feature folders, standalone components, a single signal-based store per feature, typed HTTP services. 76 unit tests under `client/src/app`, run with `npm run test:ci` |
+| 18 | Structured code, clean components and state | Feature folders, standalone components, a single signal-based store per feature, typed HTTP services. 68 unit tests under `client/src/app`, run with `npm run test:ci` |
 | 19 | No warnings in the browser console | Verified manually; strict template checking and strict TypeScript are enabled |
 
 ## Submission

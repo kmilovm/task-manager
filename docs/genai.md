@@ -5,7 +5,7 @@ out, and an account of how the output was validated and corrected. This is that 
 
 It is not a hypothetical. **The entire `Tasks` feature in this repository — domain, application
 services, persistence, endpoints, the Angular screens and 172 of the 256 backend tests — was
-produced by driving an agent through the protocol below.** The 76 frontend tests were written by
+produced by driving an agent through the protocol below.** The 68 frontend tests were written by
 hand afterwards, for the reason given in §7. The `Users` feature was written by hand first, on
 purpose, so there would be a reference implementation to point the agent at and a fair comparison
 between the two halves of the same codebase.
@@ -401,7 +401,7 @@ first user's task; expired tokens, tokens signed with the wrong key, and no toke
   and this document originally recorded that as accepted debt. It was wrong: Karma and Jasmine
   were already in `package.json`, `ng test` was already configured in `angular.json`, and
   `tsconfig.spec.json` already existed. The claim was accepted without checking — the exact failure
-  this write-up warns against, committed by the reviewer rather than the agent. The SPA now has 76
+  this write-up warns against, committed by the reviewer rather than the agent. The SPA now has 68
   tests, written afterwards by hand.
 - **Rehearsing the agent found a defect in the hand-written half.** Running the protocol again on a
   throwaway copy, for a `ChecklistItem` entity, the agent hit a validation message that never
