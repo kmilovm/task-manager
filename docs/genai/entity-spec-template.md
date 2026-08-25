@@ -5,6 +5,11 @@ nothing is left to its judgement and every generated rule can be traced back to 
 
 Copy this file, fill it in, and hand it to the agent together with `entity-agent.md`.
 
+If you write the acceptance criteria here rather than referencing an existing story, this file is
+the specification, so it belongs in `docs/specs/` with the next `US-` number — see
+[`../specs/README.md`](../specs/README.md). What stays in `docs/genai/specs/` is only the part the
+agent needs that the story does not state: field types, operations and ordering.
+
 ---
 
 ## Identity

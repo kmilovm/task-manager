@@ -17,6 +17,18 @@ to the automated test that proves it.
 3. Production code is written until the test passes, then refactored.
 4. The traceability table at the bottom of each spec is updated with the test name.
 
+## Where a specification lives
+
+A specification lives here, in `docs/specs/`, and nowhere else. That holds however it was written:
+a story typed by hand, or one filled in from
+[`../genai/entity-spec-template.md`](../genai/entity-spec-template.md) to drive the entity agent.
+If it carries its own Gherkin, it is the source of truth and it belongs in this folder with the
+next `US-` number and a row in the table above.
+
+`docs/genai/specs/` holds only the agent's *input*: identity, field types, operations and ordering,
+pointing at the specification here for the rules and the acceptance criteria. That split exists so
+the same business rule is never written down twice.
+
 ## Conventions
 
 - `Given` describes state that already exists, `When` a single action, `Then` an observable outcome.
