@@ -1,0 +1,129 @@
+<section class="page-header">
+  <div>
+    <h1>Your tasks</h1>
+    <p class="muted">Everything you have to do, soonest first.</p>
+  </div>
+
+  <a class="button-link" routerLink="/tasks/new">New task</a>
+</section>
+
+<form class="card filters" [formGroup]="filters" novalidate>
+  <div class="field">
+    <label for="search">Search</label>
+    <input id="search" type="search" formControlName="search" placeholder="Search by title" />
+  </div>
+
+  <div class="field">
+    <label for="status">Status</label>
+    <select id="status" formControlName="status">
+      <option value="">All statuses</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ label(status) }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field filter-actions">
+    <button type="button" class="secondary" (click)="clearFilters()" [disabled]="!isFiltered()">
+      Clear filters
+    </button>
+  </div>
+</form>
+
+@if (errorMessage(); as message) {
+  <p class="alert" role="alert">
+    <span>{{ message }}</span>
+    <button type="button" class="secondary" (click)="retry()">Try again</button>
+  </p>
+}
+
+@if (loading() && tasks().length === 0) {
+  <p class="muted" role="status">Loading your tasks…</p>
+} @else if (isEmpty()) {
+  <section class="card empty-state">
+    @if (isFiltered()) {
+      <p>No tasks match this filter.</p>
+      <button type="button" class="secondary" (click)="clearFilters()">Clear filters</button>
+    } @else {
+      <p>You have no tasks yet.</p>
+      <a class="button-link" routerLink="/tasks/new">Create your first task</a>
+    }
+  </section>
+} @else {
+  @if (loading()) {
+    <p class="muted refreshing" role="status">Refreshing…</p>
+  }
+
+  <table class="card task-table">
+    <caption class="visually-hidden">
+      Your tasks, ordered by due date with undated tasks last
+    </caption>
+
+    <thead>
+      <tr>
+        <th scope="col">Task</th>
+        <th scope="col">Status</th>
+        <th scope="col">Due</th>
+        <th scope="col"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (task of tasks(); track task.id) {
+        <tr>
+          <td data-label="Task">
+            <a class="task-title" [routerLink]="['/tasks', task.id]">{{ task.title }}</a>
+
+            @if (task.description) {
+              <p class="muted task-description">{{ task.description }}</p>
+            }
+          </td>
+
+          <td data-label="Status">
+            <span
+              class="badge"
+              [class.badge-pending]="task.status === 'Pending'"
+              [class.badge-progress]="task.status === 'InProgress'"
+              [class.badge-done]="task.status === 'Done'"
+              >{{ label(task.status) }}</span
+            >
+
+            @if (task.completedAt; as completedAt) {
+              <span class="muted completed-at">Completed {{ completedAt | date: 'mediumDate' }}</span>
+            }
+          </td>
+
+          <td data-label="Due">
+            @if (task.dueDate; as dueDate) {
+              {{ asLocalDate(dueDate) | date: 'mediumDate' }}
+            } @else {
+              <span class="muted">No due date</span>
+            }
+          </td>
+
+          <td data-label="Actions">
+            @if (pendingDelete() === task.id) {
+              <span class="row-actions" role="group" [attr.aria-label]="'Confirm deleting ' + task.title">
+                <span class="muted">Delete this task?</span>
+                <button type="button" class="danger" (click)="confirmDelete(task)">Yes, delete</button>
+                <button type="button" class="secondary" (click)="cancelDelete()">Cancel</button>
+              </span>
+            } @else {
+              <span class="row-actions">
+                <a class="button-link secondary" [routerLink]="['/tasks', task.id]">Edit</a>
+                <button
+                  type="button"
+                  class="secondary"
+                  [disabled]="deletingId() === task.id"
+                  (click)="askDelete(task)"
+                >
+                  {{ deletingId() === task.id ? 'Deleting…' : 'Delete' }}
+                </button>
+              </span>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

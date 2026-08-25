@@ -1,0 +1,100 @@
+@if (notFound()) {
+  <section class="card">
+    <h1>Task not found</h1>
+    <p class="muted">It may have been deleted, or it belongs to somebody else.</p>
+    <a class="button-link" routerLink="/tasks">Back to your tasks</a>
+  </section>
+} @else {
+  <section class="card">
+    <h1>{{ isEdit() ? 'Edit task' : 'New task' }}</h1>
+    <p class="muted">
+      {{ isEdit() ? 'Every field is saved as you leave it here.' : 'A new task starts as pending.' }}
+    </p>
+
+    @if (errorMessage(); as message) {
+      <p class="alert" role="alert">{{ message }}</p>
+    }
+
+    @if (loading()) {
+      <p class="muted" role="status">Loading the task…</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <label for="title">Title</label>
+          <input
+            id="title"
+            type="text"
+            formControlName="title"
+            autocomplete="off"
+            [attr.aria-invalid]="form.controls.title.touched && form.controls.title.invalid"
+          />
+          <app-field-error
+            [control]="form.controls.title"
+            [serverErrors]="fieldErrors()['title'] ?? []"
+            label="Title"
+          />
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            rows="4"
+            formControlName="description"
+            [attr.aria-invalid]="form.controls.description.touched && form.controls.description.invalid"
+          ></textarea>
+          <p class="muted hint">Optional, up to 2000 characters.</p>
+          <app-field-error
+            [control]="form.controls.description"
+            [serverErrors]="fieldErrors()['description'] ?? []"
+            label="Description"
+          />
+        </div>
+
+        <div class="field">
+          <label for="dueDate">Due date</label>
+          <input
+            id="dueDate"
+            type="date"
+            formControlName="dueDate"
+            [attr.aria-invalid]="form.controls.dueDate.touched && form.controls.dueDate.invalid"
+          />
+          <p class="muted hint">Optional. Leave it empty to clear the due date.</p>
+          <app-field-error
+            [control]="form.controls.dueDate"
+            [serverErrors]="fieldErrors()['dueDate'] ?? []"
+            label="Due date"
+          />
+        </div>
+
+        @if (isEdit()) {
+          <div class="field">
+            <label for="status">Status</label>
+            <select
+              id="status"
+              formControlName="status"
+              [attr.aria-invalid]="form.controls.status.touched && form.controls.status.invalid"
+            >
+              @for (status of statuses; track status) {
+                <option [value]="status">{{ label(status) }}</option>
+              }
+            </select>
+            <p class="muted hint">Marking a task done records when you finished it.</p>
+            <app-field-error
+              [control]="form.controls.status"
+              [serverErrors]="fieldErrors()['status'] ?? []"
+              label="Status"
+            />
+          </div>
+        }
+
+        <div class="form-actions">
+          <button type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Saving…' : isEdit() ? 'Save changes' : 'Create task' }}
+          </button>
+          <a class="button-link secondary" routerLink="/tasks">Cancel</a>
+        </div>
+      </form>
+    }
+  </section>
+}

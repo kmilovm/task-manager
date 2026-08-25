@@ -2,6 +2,10 @@
   <a class="brand" routerLink="/">Task Manager</a>
 
   @if (isAuthenticated()) {
+    <nav class="app-nav">
+      <a routerLink="/tasks" routerLinkActive="active">Tasks</a>
+    </nav>
+
     <div class="account">
       <span class="muted">{{ currentUser()?.displayName }}</span>
       <button type="button" class="secondary" (click)="signOut()">Sign out</button>
