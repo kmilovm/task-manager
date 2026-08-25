@@ -196,5 +196,12 @@ Stated rather than hidden.
   rule duplicating the error message. It is a decision, not an oversight.
 - **`?status=1` works as well as `?status=InProgress`.** Numeric ordinals bind, which
   `Enum.IsDefined` permits. Responses always serialise the string form.
+- **The access token is kept in `localStorage`.** That is the common choice for a SPA with no
+  backend-for-frontend, and it is exposed to cross-site scripting: any injected script can read it.
+  The stronger design is an `httpOnly`, `SameSite` cookie issued by the API plus CSRF protection,
+  which the browser will not hand to a script at all. That is a different authentication design
+  rather than a patch, so it is named here rather than half-done.
+- **Nothing is transactional across two entities**, because no use case needs it. A rule that
+  counted rows before inserting would not be race-safe as written.
 - **The demo signing key is in `appsettings.Development.json`** and is clearly marked as such. A
   real deployment supplies it from configuration or a secret store.
