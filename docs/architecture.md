@@ -2,16 +2,19 @@
 
 ## The dependency rule
 
-```
-TaskManager.Domain          entities, value objects, invariants, domain exceptions
-                            no project references at all
-        ^
-TaskManager.Application     use-case services, DTOs, validators,
-                            ports (interfaces) the outer rings must implement
-        ^
-TaskManager.Infrastructure  EF Core, repositories, BCrypt, JWT, clock, seeding
-        ^
-TaskManager.Api             endpoints, authentication pipeline, error mapping
+```mermaid
+flowchart TD
+    Client["client<br/>Angular 19 SPA"]
+    Api["TaskManager.Api<br/>endpoints, auth pipeline, error mapping"]
+    Infrastructure["TaskManager.Infrastructure<br/>EF Core, repositories, JWT, hashing, clock"]
+    Application["TaskManager.Application<br/>use cases, DTOs, validators, ports"]
+    Domain["TaskManager.Domain<br/>entities, value objects, invariants"]
+
+    Client -->|"HTTP + bearer token"| Api
+    Api --> Application
+    Infrastructure --> Application
+    Application --> Domain
+    Api -. "composition root only" .-> Infrastructure
 ```
 
 Dependencies point inward and nothing points back. `TaskManager.Api` references
@@ -39,6 +42,36 @@ Declared in `src/TaskManager.Application/Abstractions/Ports.cs`, implemented in
 | `ITokenGenerator` | `Security/JwtTokenGenerator.cs` |
 | `IUserRepository` | `Persistence/Repositories/UserRepository.cs` |
 | `ITaskRepository` | `Persistence/Repositories/TaskRepository.cs` |
+
+The dependency inversion is the whole point: the application layer declares what it needs, and the
+outermost ring supplies it.
+
+```mermaid
+flowchart LR
+    subgraph app["TaskManager.Application — declares"]
+        direction TB
+        IClock["IClock"]
+        IPasswordHasher["IPasswordHasher"]
+        ITokenGenerator["ITokenGenerator"]
+        IUserRepository["IUserRepository"]
+        ITaskRepository["ITaskRepository"]
+    end
+
+    subgraph infra["TaskManager.Infrastructure — implements"]
+        direction TB
+        SystemClock["SystemClock"]
+        BCryptPasswordHasher["BCryptPasswordHasher"]
+        JwtTokenGenerator["JwtTokenGenerator"]
+        UserRepository["UserRepository"]
+        TaskRepository["TaskRepository"]
+    end
+
+    SystemClock -.-> IClock
+    BCryptPasswordHasher -.-> IPasswordHasher
+    JwtTokenGenerator -.-> ITokenGenerator
+    UserRepository -.-> IUserRepository
+    TaskRepository -.-> ITaskRepository
+```
 
 **Deliberately absent:** `IUnitOfWork` (`DbContext` already is one and nothing here spans two
 entities), CQRS, MediatR, a generic `IRepository<T>`, the Specification pattern, AutoMapper and
@@ -84,6 +117,95 @@ client/src/app/features/<feature>/
     <feature>-list.component.ts|html
     <feature>-form.component.ts|html
 ```
+
+## How a request travels
+
+`PUT /api/tasks/{id}` exercises every rule the exercise is graded on: authentication, ownership,
+validation, a domain invariant and error mapping. Nothing in the endpoint decides anything.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Angular client
+    participant E as TaskEndpoints
+    participant S as TaskService
+    participant T as TaskItem
+    participant R as TaskRepository
+    participant H as ApiExceptionHandler
+
+    C->>E: PUT /api/tasks/{id} + bearer token
+    E->>E: principal.GetUserId()
+    E->>S: UpdateAsync(ownerId, id, request)
+    S->>S: ValidateAndThrowAsync(request)
+    S->>R: GetByIdAsync(id)
+    R-->>S: TaskItem or null
+
+    alt missing, or owned by somebody else
+        S-->>H: NotFoundException
+        H-->>C: 404 application/problem+json
+    else owned by the caller
+        S->>T: Update(title, description, dueDate)
+        S->>T: ChangeStatus(status, clock.UtcNow)
+        S->>R: UpdateAsync(task)
+        R-->>S: saved
+        S-->>E: TaskDto
+        E-->>C: 200 TaskDto
+    end
+```
+
+The repository is asked for the task **by id alone**. Filtering by owner there would give the
+authorisation rule a second, silent home; keeping it in the service is what lets it be unit-tested
+without HTTP and without a database.
+
+## The data
+
+```mermaid
+erDiagram
+    USERS ||--o{ TASKS : owns
+
+    USERS {
+        uniqueidentifier Id PK
+        nvarchar_254 Email UK "unique index, stored lowercased"
+        nvarchar_100 DisplayName
+        nvarchar_255 PasswordHash "BCrypt, work factor 12"
+        datetime2 CreatedAt
+    }
+
+    TASKS {
+        uniqueidentifier Id PK
+        nvarchar_200 Title
+        nvarchar_2000 Description "nullable"
+        nvarchar_16 Status "stored as text, not an ordinal"
+        date DueDate "nullable"
+        datetime2 CreatedAt
+        datetime2 CompletedAt "nullable"
+        uniqueidentifier OwnerId FK "indexed, delete rule NO ACTION"
+    }
+```
+
+Instants are stored as UTC `datetime2` throughout, applied by a single convention in
+`AppDbContext.ConfigureConventions`. `DueDate` is a calendar date and maps to `DateOnly`, so a due
+date never shifts by a day across time zones.
+
+## The one stateful rule
+
+`CompletedAt` is the only field whose value depends on a transition rather than on the request.
+BR-206 and BR-211 are easier to see as a machine than as prose.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending: Create — never any other status
+    Pending --> InProgress
+    InProgress --> Pending
+    Pending --> Done: stamps CompletedAt
+    InProgress --> Done: stamps CompletedAt
+    Done --> Pending: clears CompletedAt
+    Done --> InProgress: clears CompletedAt
+    Done --> Done: keeps the original stamp
+```
+
+`ChangeStatus` returns early when the status is unchanged, which is what makes the self-transition
+behave: completion time records when the work was finished, not when the record was last edited.
 
 ## Conventions
 
